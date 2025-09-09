@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pokemon Go 等級計算機</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: auto; }
+    input, select { width: 100%; padding: 8px; margin: 5px 0; }
+    button { padding: 10px 20px; margin-top: 10px; cursor: pointer; }
+    .progress { width: 100%; background: #eee; border-radius: 10px; margin: 10px 0; }
+    .progress-bar { height: 20px; background: #4caf50; width: 0%; border-radius: 10px; transition: width 0.5s; }
+  </style>
+</head>
+<body>
+  <h1>Pokemon Go 等級計算機</h1>
+
+  <label>當前等級:</label>
+  <input type="number" id="currentLevel" min="1" max="50" value="40">
+
+  <label>當前 XP:</label>
+  <input type="number" id="currentXP" min="0" value="0">
+
+  <label>目標等級:</label>
+  <input type="number" id="targetLevel" min="1" max="50" value="50">
+
+  <label>起始日期:</label>
+  <input type="date" id="startDate" value="">
+
+  <label>目標日期:</label>
+  <input type="date" id="endDate" value="">
+
+  <button onclick="calculate()">計算</button>
+
+  <h2>結果</h2>
+  <div id="results"></div>
+  <div class="progress"><div id="progressBar" class="progress-bar"></div></div>
+
+  <script>
+    // Pokemon Go XP 累積表 Lv1–50
+    const xpTable = [
+      0, 1000, 3000, 6000, 10000, 15000, 21000, 28000, 36000, 45000,
+      55000, 66000, 78000, 91000, 105000, 120000, 136000, 153000, 171000, 190000,
+      210000, 231000, 253000, 276000, 300000, 325000, 351000, 378000, 406000, 435000,
+      465000, 496000, 528000, 561000, 595000, 630000, 666000, 703000, 741000, 780000,
+      820000, 861000, 903000, 946000, 990000, 1035000, 1081000, 1128000, 1176000, 1225000
+    ];
+
+    // 預設起始日期為今天
+    document.getElementById('startDate').valueAsDate = new Date();
+    document.getElementById('endDate').valueAsDate = new Date();
+
+    function calculate() {
+      const currentLevel = parseInt(document.getElementById('currentLevel').value);
+      const currentXP = parseInt(document.getElementById('currentXP').value);
+      const targetLevel = parseInt(document.getElementById('targetLevel').value);
+      const startDate = new Date(document.getElementById('startDate').value);
+      const endDate = new Date(document.getElementById('endDate').value);
+
+      if (targetLevel <= currentLevel) {
+        alert("目標等級必須大於當前等級");
+        return;
+      }
+      if (currentXP < 0 || currentXP > (xpTable[currentLevel] - xpTable[currentLevel-1])) {
+        alert(`當前 XP 輸入錯誤，最大值: ${xpTable[currentLevel] - xpTable[currentLevel-1]}`);
+        return;
+      }
+
+      const totalXPNeeded = xpTable[targetLevel - 1] - (xpTable[currentLevel - 1] + currentXP);
+      const timeDiff = endDate - startDate;
+      const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+      const dailyXP = daysLeft > 0 ? Math.ceil(totalXPNeeded / daysLeft) : totalXPNeeded;
+      const progressPercent = ((xpTable[currentLevel - 1] + currentXP) / xpTable[targetLevel - 1]) * 100;
+
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = `
+        總共需要 XP: ${totalXPNeeded.toLocaleString()} <br>
+        剩餘天數: ${daysLeft} <br>
+        每天平均需要 XP: ${dailyXP.toLocaleString()} <br>
+        當前進度: ${progressPercent.toFixed(2)}%
+      `;
+
+      document.getElementById('progressBar').style.width = progressPercent + '%';
+    }
+  </script>
+</body>
+</html>

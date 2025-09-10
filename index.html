@@ -14,30 +14,35 @@
         .progress-bar { height: 20px; background: #4CAF50; width: 0%; border-radius: 10px; transition: width 0.5s; position: relative; }
         #results { margin-top: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 8px; border: 1px solid #ddd; }
         .error-message { color: red; margin-top: 10px; }
+        header { display: flex; justify-content: space-between; align-items: center; }
+        #lang-toggle { font-size: 1em; padding: 5px 10px; background-color: #f0f0f0; border: 1px solid #ccc; cursor: pointer; border-radius: 4px; }
     </style>
 </head>
 <body>
-    <h1>Pokemon Go 等級計算機</h1>
+    <header>
+        <h1 id="title">Pokemon Go 等級計算機</h1>
+        <button id="lang-toggle">EN</button>
+    </header>
 
-    <label>當前等級:</label>
+    <label id="label-currentLevel">當前等級:</label>
     <input type="number" id="currentLevel" min="1" max="50" value="1">
 
-    <label>當前 XP (距離下一級):</label>
+    <label id="label-currentXP">目前 XP:</label>
     <input type="text" id="currentXP" min="0" value="0">
 
-    <label>目標等級:</label>
+    <label id="label-targetLevel">目標等級:</label>
     <input type="number" id="targetLevel" min="1" max="50" value="50">
 
-    <label>起始日期:</label>
+    <label id="label-startDate">起始日期:</label>
     <input type="date" id="startDate">
 
-    <label>目標日期:</label>
+    <label id="label-endDate">目標日期:</label>
     <input type="date" id="endDate">
 
-    <button onclick="calculate()">計算</button>
+    <button id="calculate-btn" onclick="calculate()">計算</button>
 
     <div id="results">
-        <h3>計算結果</h3>
+        <h3 id="results-title">計算結果</h3>
         <div id="resultContent"></div>
     </div>
 
@@ -74,6 +79,76 @@
             ];
             const totalExpForLevel50 = xpTable[49];
 
+            const langData = {
+                zh: {
+                    title: "Pokemon Go 等級計算機",
+                    labelCurrentLevel: "當前等級:",
+                    labelCurrentXP: "目前 XP:",
+                    labelTargetLevel: "目標等級:",
+                    labelStartDate: "起始日期:",
+                    labelEndDate: "目標日期:",
+                    calculateBtn: "計算",
+                    resultsTitle: "計算結果",
+                    progressCurrentLevel: "目前等級進度",
+                    progressOverall: "封頂進度 (至 50 級)",
+                    neededXP: "總共需要經驗值:",
+                    daysLeft: "距離目標天數:",
+                    dailyXP: "每天平均需要經驗值:",
+                    dailyExcellent: "每天平均需要 Excellent 投擲:",
+                    congrats: `恭喜你！你目前的經驗值已經足以達到或超過 {targetLevel} 級了！`,
+                    errorLevel: "請輸入有效的等級 (1-50) 和經驗值。",
+                    errorTarget: "目標等級必須大於當前等級。",
+                    errorDates: "請選擇起始日期和目標日期。",
+                    errorDateOrder: "目標日期不能早於起始日期。"
+                },
+                en: {
+                    title: "Pokemon Go Level Calculator",
+                    labelCurrentLevel: "Current Level:",
+                    labelCurrentXP: "Current XP:",
+                    labelTargetLevel: "Target Level:",
+                    labelStartDate: "Start Date:",
+                    labelEndDate: "End Date:",
+                    calculateBtn: "Calculate",
+                    resultsTitle: "Results",
+                    progressCurrentLevel: "Current Level Progress",
+                    progressOverall: "Progress to Lv. 50",
+                    neededXP: "Total XP needed:",
+                    daysLeft: "Days left to goal:",
+                    dailyXP: "Daily XP needed:",
+                    dailyExcellent: "Daily Excellent throws needed:",
+                    congrats: `Congratulations! Your current XP is enough to reach or exceed level {targetLevel}!`,
+                    errorLevel: "Please enter a valid level (1-50) and XP.",
+                    errorTarget: "Target level must be greater than current level.",
+                    errorDates: "Please select a start date and an end date.",
+                    errorDateOrder: "End date cannot be earlier than start date."
+                }
+            };
+
+            let currentLang = 'zh';
+
+            const updateLang = () => {
+                const data = langData[currentLang];
+                document.getElementById('title').textContent = data.title;
+                document.getElementById('lang-toggle').textContent = currentLang === 'zh' ? 'EN' : '中';
+                document.getElementById('label-currentLevel').textContent = data.labelCurrentLevel;
+                document.getElementById('label-currentXP').textContent = data.labelCurrentXP;
+                document.getElementById('label-targetLevel').textContent = data.labelTargetLevel;
+                document.getElementById('label-startDate').textContent = data.labelStartDate;
+                document.getElementById('label-endDate').textContent = data.labelEndDate;
+                document.getElementById('calculate-btn').textContent = data.calculateBtn;
+                document.getElementById('results-title').textContent = data.resultsTitle;
+                document.getElementById('currentLevelProgressTitle').textContent = data.progressCurrentLevel;
+                document.getElementById('overallProgressTitle').textContent = data.progressOverall;
+                
+                // 重新觸發計算以更新進度條文字和結果內容
+                calculate();
+            };
+
+            document.getElementById('lang-toggle').addEventListener('click', () => {
+                currentLang = currentLang === 'zh' ? 'en' : 'zh';
+                updateLang();
+            });
+
             // 設定預設日期
             document.getElementById('startDate').valueAsDate = new Date();
             document.getElementById('endDate').value = '2025-10-14';
@@ -105,21 +180,22 @@
                 const currentLevelProgressText = document.getElementById('currentLevelProgressText');
                 const overallProgressText = document.getElementById('overallProgressText');
 
+                const lang = langData[currentLang];
                 errorMsg.textContent = '';
                 resultsDiv.innerHTML = '';
 
                 if (isNaN(currentLevel) || isNaN(targetLevel) || currentLevel < 1 || targetLevel < 1 || currentLevel > 50 || targetLevel > 50) {
-                    errorMsg.textContent = "請輸入有效的等級 (1-50) 和經驗值。";
+                    errorMsg.textContent = lang.errorLevel;
                     return;
                 }
 
                 if (targetLevel <= currentLevel) {
-                    errorMsg.textContent = "目標等級必須大於當前等級。";
+                    errorMsg.textContent = lang.errorTarget;
                     return;
                 }
                 
                 if (!document.getElementById('startDate').value || !document.getElementById('endDate').value) {
-                    errorMsg.textContent = "請選擇起始日期和目標日期。";
+                    errorMsg.textContent = lang.errorDates;
                     return;
                 }
 
@@ -129,7 +205,7 @@
                 const totalCurrentExp = totalExpAtCurrentLevel + currentXP;
                 
                 if (totalCurrentExp >= totalExpToTargetLevel) {
-                    resultsDiv.innerHTML = `恭喜你！你目前的經驗值已經足以達到或超過 ${targetLevel} 級了！`;
+                    resultsDiv.innerHTML = lang.congrats.replace('{targetLevel}', targetLevel);
                     currentLevelProgressBar.style.width = '100%';
                     overallProgressBar.style.width = '100%';
                     currentLevelProgressText.textContent = '100%';
@@ -142,7 +218,7 @@
                 const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
                 if (daysLeft < 0) {
-                    errorMsg.textContent = "目標日期不能早於起始日期。";
+                    errorMsg.textContent = lang.errorDateOrder;
                     return;
                 }
 
@@ -154,19 +230,20 @@
                 const overallProgressPercent = (totalCurrentExp / totalExpForLevel50) * 100;
 
                 resultsDiv.innerHTML = `
-                    <p><strong>總共需要經驗值:</strong> ${totalXPNeeded.toLocaleString()}</p>
-                    <p><strong>距離目標天數:</strong> ${daysLeft} 天</p>
-                    <p><strong>每天平均需要經驗值:</strong> ${dailyXP.toLocaleString()}</p>
-                    <p><strong>每天平均需要 Excellent 投擲:</strong> ${dailyExcellentThrowsNeeded.toLocaleString()} 次</p>
+                    <p><strong>${lang.neededXP}</strong> ${totalXPNeeded.toLocaleString()}</p>
+                    <p><strong>${lang.daysLeft}</strong> ${daysLeft} ${currentLang === 'zh' ? '天' : 'days'}</p>
+                    <p><strong>${lang.dailyXP}</strong> ${dailyXP.toLocaleString()}</p>
+                    <p><strong>${lang.dailyExcellent}</strong> ${dailyExcellentThrowsNeeded.toLocaleString()} ${currentLang === 'zh' ? '次' : 'throws'}</p>
                 `;
                 
-                currentLevelProgressTitle.textContent = `目前等級進度 (${currentLevel} 級 → ${currentLevel + 1} 級)`;
-                overallProgressTitle.textContent = `封頂進度 (${currentLevel} 級 → 50 級)`;
+                currentLevelProgressTitle.textContent = `${lang.progressCurrentLevel} (${currentLevel} → ${currentLevel + 1})`;
+                overallProgressTitle.textContent = `${lang.progressOverall}`;
                 currentLevelProgressBar.style.width = `${currentLevelProgressPercent.toFixed(2)}%`;
                 overallProgressBar.style.width = `${overallProgressPercent.toFixed(2)}%`;
                 currentLevelProgressText.textContent = `${currentXP.toLocaleString()} / ${(totalExpToNextLevel).toLocaleString()} XP (${currentLevelProgressPercent.toFixed(2)}%)`;
                 overallProgressText.textContent = `${totalCurrentExp.toLocaleString()} / ${totalExpForLevel50.toLocaleString()} XP (${overallProgressPercent.toFixed(2)}%)`;
             }
+            updateLang();
         });
     </script>
 </body>

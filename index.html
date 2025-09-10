@@ -74,11 +74,9 @@
             ];
             const totalExpForLevel50 = xpTable[49];
 
-            const today = new Date();
-            document.getElementById('startDate').valueAsDate = today;
-
-            const targetDate = new Date(today.getFullYear(), 9, 14); // 9 代表 10 月
-            document.getElementById('endDate').value = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`;
+            // 設定預設日期
+            document.getElementById('startDate').valueAsDate = new Date();
+            document.getElementById('endDate').value = '2025-10-14';
 
             const xpInput = document.getElementById('currentXP');
             xpInput.addEventListener('input', (e) => {
@@ -93,7 +91,7 @@
             window.calculate = function() {
                 const currentLevel = parseInt(document.getElementById('currentLevel').value);
                 const currentXPValue = document.getElementById('currentXP').value.replace(/,/g, '');
-                const currentXP = parseInt(currentXPValue);
+                const currentXP = currentXPValue === '' ? 0 : parseInt(currentXPValue);
                 const targetLevel = parseInt(document.getElementById('targetLevel').value);
                 const startDate = new Date(document.getElementById('startDate').value);
                 const endDate = new Date(document.getElementById('endDate').value);
@@ -110,13 +108,18 @@
                 errorMsg.textContent = '';
                 resultsDiv.innerHTML = '';
 
-                if (isNaN(currentLevel) || isNaN(currentXP) || isNaN(targetLevel) || currentLevel < 1 || targetLevel < 1 || currentLevel > 50 || targetLevel > 50) {
+                if (isNaN(currentLevel) || isNaN(targetLevel) || currentLevel < 1 || targetLevel < 1 || currentLevel > 50 || targetLevel > 50) {
                     errorMsg.textContent = "請輸入有效的等級 (1-50) 和經驗值。";
                     return;
                 }
 
                 if (targetLevel <= currentLevel) {
                     errorMsg.textContent = "目標等級必須大於當前等級。";
+                    return;
+                }
+                
+                if (!document.getElementById('startDate').value || !document.getElementById('endDate').value) {
+                    errorMsg.textContent = "請選擇起始日期和目標日期。";
                     return;
                 }
 
@@ -146,10 +149,8 @@
                 const dailyXP = daysLeft > 0 ? Math.ceil(totalXPNeeded / daysLeft) : totalXPNeeded;
                 const dailyExcellentThrowsNeeded = Math.ceil(dailyXP / 2000);
                 
-                // 計算目前等級進度條百分比
                 const currentLevelProgressPercent = (totalExpToNextLevel > 0) ? Math.min((currentXP / totalExpToNextLevel) * 100, 100) : 100;
                 
-                // 計算總體進度條百分比 (固定分母為 LV50 總經驗)
                 const overallProgressPercent = (totalCurrentExp / totalExpForLevel50) * 100;
 
                 resultsDiv.innerHTML = `

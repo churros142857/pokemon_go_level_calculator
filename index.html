@@ -53,7 +53,7 @@
     
     <div class="progress-container">
         <div class="progress-label">
-            <span id="overallProgressTitle">總體進度 (至目標等級)</span>
+            <span id="overallProgressTitle">封頂進度 (至 50 級)</span>
             <span id="overallProgressText">0%</span>
         </div>
         <div class="progress">
@@ -72,11 +72,12 @@
                 2500000, 3000000, 3750000, 4750000, 6000000, 7500000, 9500000, 12000000, 15000000, 20000000,
                 26000000, 33500000, 42500000, 53500000, 66500000, 82000000, 100000000, 121000000, 146000000, 176000000
             ];
+            const totalExpForLevel50 = xpTable[49];
 
             const today = new Date();
             document.getElementById('startDate').valueAsDate = today;
 
-            const targetDate = new Date(today.getFullYear(), 9, 14);
+            const targetDate = new Date(today.getFullYear(), 9, 14); // 9 代表 10 月
             document.getElementById('endDate').valueAsDate = targetDate;
 
             window.calculate = function() {
@@ -132,27 +133,27 @@
                 }
 
                 const dailyXP = daysLeft > 0 ? Math.ceil(totalXPNeeded / daysLeft) : totalXPNeeded;
-                const excellentThrowsNeeded = Math.ceil(totalXPNeeded / 2000);
+                const dailyExcellentThrowsNeeded = Math.ceil(dailyXP / 2000);
                 
                 // 計算目前等級進度條百分比
                 const currentLevelProgressPercent = (totalExpToNextLevel > 0) ? Math.min((currentXP / totalExpToNextLevel) * 100, 100) : 100;
                 
-                // 計算總體進度條百分比
-                const overallProgressPercent = (totalCurrentExp / totalExpToTargetLevel) * 100;
+                // 計算總體進度條百分比 (固定分母為 LV50 總經驗)
+                const overallProgressPercent = (totalCurrentExp / totalExpForLevel50) * 100;
 
                 resultsDiv.innerHTML = `
                     <p><strong>總共需要經驗值:</strong> ${totalXPNeeded.toLocaleString()}</p>
                     <p><strong>距離目標天數:</strong> ${daysLeft} 天</p>
                     <p><strong>每天平均需要經驗值:</strong> ${dailyXP.toLocaleString()}</p>
-                    <p><strong>總共需要 Excellent 投擲:</strong> ${excellentThrowsNeeded.toLocaleString()} 次</p>
+                    <p><strong>每天平均需要 Excellent 投擲:</strong> ${dailyExcellentThrowsNeeded.toLocaleString()} 次</p>
                 `;
                 
                 currentLevelProgressTitle.textContent = `目前等級進度 (${currentLevel} 級 → ${currentLevel + 1} 級)`;
-                overallProgressTitle.textContent = `總體進度 (${currentLevel} 級 → ${targetLevel} 級)`;
+                overallProgressTitle.textContent = `封頂進度 (${currentLevel} 級 → 50 級)`;
                 currentLevelProgressBar.style.width = `${currentLevelProgressPercent.toFixed(2)}%`;
                 overallProgressBar.style.width = `${overallProgressPercent.toFixed(2)}%`;
                 currentLevelProgressText.textContent = `${currentXP.toLocaleString()} / ${(totalExpToNextLevel).toLocaleString()} XP (${currentLevelProgressPercent.toFixed(2)}%)`;
-                overallProgressText.textContent = `${totalCurrentExp.toLocaleString()} / ${totalExpToTargetLevel.toLocaleString()} XP (${overallProgressPercent.toFixed(2)}%)`;
+                overallProgressText.textContent = `${totalCurrentExp.toLocaleString()} / ${totalExpForLevel50.toLocaleString()} XP (${overallProgressPercent.toFixed(2)}%)`;
             }
         });
     </script>

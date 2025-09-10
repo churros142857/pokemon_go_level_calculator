@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pokemon Go 等級計算機</title>
+    <title>Pokemon Go 衝等計算機</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: auto; }
         input, select { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
@@ -20,7 +20,7 @@
 </head>
 <body>
     <header>
-        <h1 id="title">Pokemon Go 等級計算機</h1>
+        <h1 id="title">Pokemon Go 衝等計算機</h1>
         <button id="lang-toggle">EN</button>
     </header>
 
@@ -81,7 +81,7 @@
 
             const langData = {
                 zh: {
-                    title: "Pokemon Go 等級計算機",
+                    title: "Pokemon Go 衝等計算機",
                     labelCurrentLevel: "當前等級:",
                     labelCurrentXP: "目前 XP:",
                     labelTargetLevel: "目標等級:",
@@ -91,7 +91,7 @@
                     resultsTitle: "計算結果",
                     progressCurrentLevel: "目前等級進度",
                     progressOverall: "封頂進度 (至 50 級)",
-                    neededXP: "總共需要經驗值:",
+                    neededXP: "距離目標需要經驗值:",
                     daysLeft: "距離目標天數:",
                     dailyXP: "每天平均需要經驗值:",
                     dailyExcellent: "每天平均需要 Excellent 投擲:",
@@ -102,7 +102,7 @@
                     errorDateOrder: "目標日期不能早於起始日期。"
                 },
                 en: {
-                    title: "Pokemon Go Level Calculator",
+                    title: "Pokemon Go Leveling Calculator",
                     labelCurrentLevel: "Current Level:",
                     labelCurrentXP: "Current XP:",
                     labelTargetLevel: "Target Level:",
@@ -112,7 +112,7 @@
                     resultsTitle: "Results",
                     progressCurrentLevel: "Current Level Progress",
                     progressOverall: "Progress to Lv. 50",
-                    neededXP: "Total XP needed:",
+                    neededXP: "XP needed to goal:",
                     daysLeft: "Days left to goal:",
                     dailyXP: "Daily XP needed:",
                     dailyExcellent: "Daily Excellent throws needed:",
@@ -140,7 +140,6 @@
                 document.getElementById('currentLevelProgressTitle').textContent = data.progressCurrentLevel;
                 document.getElementById('overallProgressTitle').textContent = data.progressOverall;
                 
-                // 重新觸發計算以更新進度條文字和結果內容
                 calculate();
             };
 
@@ -149,7 +148,6 @@
                 updateLang();
             });
 
-            // 設定預設日期
             document.getElementById('startDate').valueAsDate = new Date();
             document.getElementById('endDate').value = '2025-10-14';
 

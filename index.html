@@ -108,15 +108,10 @@
                 }
 
                 const totalExpAtCurrentLevel = xpTable[currentLevel - 1];
-                const totalExpToNextLevel = xpTable[currentLevel] - xpTable[currentLevel - 1];
+                const totalExpToNextLevel = (currentLevel === 50) ? 0 : xpTable[currentLevel] - xpTable[currentLevel - 1];
                 const totalExpToTargetLevel = xpTable[targetLevel - 1];
                 const totalCurrentExp = totalExpAtCurrentLevel + currentXP;
                 
-                if (currentXP > totalExpToNextLevel && currentLevel < 50) {
-                     errorMsg.textContent = `當前 XP 錯誤，等級 ${currentLevel} 升級所需總經驗值為 ${totalExpToNextLevel.toLocaleString()}。`;
-                     return;
-                }
-
                 if (totalCurrentExp >= totalExpToTargetLevel) {
                     resultsDiv.innerHTML = `恭喜你！你目前的經驗值已經足以達到或超過 ${targetLevel} 級了！`;
                     currentLevelProgressBar.style.width = '100%';
@@ -138,7 +133,7 @@
                 const dailyXP = daysLeft > 0 ? Math.ceil(totalXPNeeded / daysLeft) : totalXPNeeded;
                 
                 // 計算目前等級進度條百分比
-                const currentLevelProgressPercent = (currentXP / totalExpToNextLevel) * 100;
+                const currentLevelProgressPercent = (totalExpToNextLevel > 0) ? Math.min((currentXP / totalExpToNextLevel) * 100, 100) : 100;
                 
                 // 計算總體進度條百分比
                 const overallProgressPercent = (totalCurrentExp / totalExpToTargetLevel) * 100;

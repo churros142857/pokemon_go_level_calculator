@@ -5,17 +5,121 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pokemon Go 衝等計算機</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: auto; }
-        input, select { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { padding: 10px 20px; margin-top: 10px; cursor: pointer; border: none; background-color: #4CAF50; color: white; border-radius: 4px; }
-        .progress-container { margin-top: 15px; }
-        .progress-label { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9em; color: #555; }
-        .progress { width: 100%; background: #eee; border-radius: 10px; margin: 5px 0; overflow: hidden; }
-        .progress-bar { height: 20px; background: #4CAF50; width: 0%; border-radius: 10px; transition: width 0.5s; position: relative; }
-        #results { margin-top: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 8px; border: 1px solid #ddd; }
-        .error-message { color: red; margin-top: 10px; }
-        header { display: flex; justify-content: space-between; align-items: center; }
-        #lang-toggle { font-size: 1em; padding: 5px 10px; background-color: #f0f0f0; border: 1px solid #ccc; cursor: pointer; border-radius: 4px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            max-width: 500px; 
+            margin: auto; 
+            box-sizing: border-box; /* 確保 padding 不會導致溢出 */
+        }
+        input, select { 
+            width: 100%; 
+            padding: 8px; 
+            margin: 5px 0; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            box-sizing: border-box; 
+        }
+        button { 
+            padding: 10px 20px; 
+            margin-top: 10px; 
+            cursor: pointer; 
+            border: none; 
+            background-color: #4CAF50; 
+            color: white; 
+            border-radius: 4px; 
+        }
+        .progress-container { 
+            margin-top: 15px; 
+        }
+        .progress-label { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 5px; 
+            font-size: 0.9em; 
+            color: #555; 
+            flex-wrap: wrap; /* 允許文字換行 */
+            word-break: break-all; /* 長單詞可斷開 */
+        }
+        .progress-label span {
+            flex-shrink: 1; /* 允許縮小 */
+            min-width: 0; /* 確保在極端情況下可以縮小 */
+            text-align: right; /* 預設右對齊 */
+        }
+        .progress-label span:first-child {
+            text-align: left; /* 第一個 span 左對齊 */
+            flex-grow: 1; /* 允許佔用更多空間 */
+        }
+
+        .progress { 
+            width: 100%; 
+            background: #eee; 
+            border-radius: 10px; 
+            margin: 5px 0; 
+            overflow: hidden; 
+        }
+        .progress-bar { 
+            height: 20px; 
+            background: #4CAF50; 
+            width: 0%; 
+            border-radius: 10px; 
+            transition: width 0.5s; 
+            position: relative; 
+        }
+        #results { 
+            margin-top: 20px; 
+            padding: 15px; 
+            background-color: #f9f9f9; 
+            border-radius: 8px; 
+            border: 1px solid #ddd; 
+        }
+        #results p {
+            margin: 5px 0; /* 讓結果段落更緊湊 */
+        }
+        .error-message { 
+            color: red; 
+            margin-top: 10px; 
+        }
+        header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            flex-wrap: wrap; /* 允許標題和按鈕換行 */
+            margin-bottom: 20px;
+        }
+        header h1 {
+            font-size: 1.8em; /* 調整手機標題大小 */
+            margin: 0;
+        }
+        #lang-toggle { 
+            font-size: 0.9em; /* 調整按鈕大小 */
+            padding: 5px 10px; 
+            background-color: #f0f0f0; 
+            border: 1px solid #ccc; 
+            cursor: pointer; 
+            border-radius: 4px; 
+            white-space: nowrap; /* 防止按鈕文字換行 */
+        }
+        /* 針對小螢幕進一步優化 */
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
+            header {
+                flex-direction: column; /* 垂直排列標題和按鈕 */
+                align-items: flex-start; /* 左對齊 */
+            }
+            #lang-toggle {
+                margin-top: 10px;
+                align-self: flex-end; /* 將按鈕靠右 */
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+            .progress-label {
+                font-size: 0.85em; /* 在小螢幕上進一步縮小文字 */
+            }
+        }
     </style>
 </head>
 <body>
@@ -137,9 +241,12 @@
                 document.getElementById('label-endDate').textContent = data.labelEndDate;
                 document.getElementById('calculate-btn').textContent = data.calculateBtn;
                 document.getElementById('results-title').textContent = data.resultsTitle;
+                
+                // 重新設置進度條的 title 文字，讓語言更新正確
                 document.getElementById('currentLevelProgressTitle').textContent = data.progressCurrentLevel;
                 document.getElementById('overallProgressTitle').textContent = data.progressOverall;
                 
+                // 重新觸發計算以更新結果內容中的文字
                 calculate();
             };
 
@@ -149,7 +256,10 @@
             });
 
             document.getElementById('startDate').valueAsDate = new Date();
-            document.getElementById('endDate').value = '2025-10-14';
+            // 確保目標日期是正確的 YYYY-MM-DD 格式
+            const defaultEndDate = new Date(2025, 9, 14); // 月份從 0 開始，9 代表 10 月
+            document.getElementById('endDate').value = defaultEndDate.toISOString().split('T')[0];
+
 
             const xpInput = document.getElementById('currentXP');
             xpInput.addEventListener('input', (e) => {
@@ -234,14 +344,16 @@
                     <p><strong>${lang.dailyExcellent}</strong> ${dailyExcellentThrowsNeeded.toLocaleString()} ${currentLang === 'zh' ? '次' : 'throws'}</p>
                 `;
                 
+                // 更新進度條標題以反映當前語言和等級
                 currentLevelProgressTitle.textContent = `${lang.progressCurrentLevel} (${currentLevel} → ${currentLevel + 1})`;
-                overallProgressTitle.textContent = `${lang.progressOverall}`;
+                overallProgressTitle.textContent = `${lang.progressOverall}`; // 已經包含 (至 50 級) 或 Lv. 50
+                
                 currentLevelProgressBar.style.width = `${currentLevelProgressPercent.toFixed(2)}%`;
                 overallProgressBar.style.width = `${overallProgressPercent.toFixed(2)}%`;
                 currentLevelProgressText.textContent = `${currentXP.toLocaleString()} / ${(totalExpToNextLevel).toLocaleString()} XP (${currentLevelProgressPercent.toFixed(2)}%)`;
                 overallProgressText.textContent = `${totalCurrentExp.toLocaleString()} / ${totalExpForLevel50.toLocaleString()} XP (${overallProgressPercent.toFixed(2)}%)`;
             }
-            updateLang();
+            updateLang(); // 初始化時呼叫以設定語言和初始計算
         });
     </script>
 </body>

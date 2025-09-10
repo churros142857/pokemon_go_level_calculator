@@ -8,8 +8,11 @@
         body { font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: auto; }
         input, select { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         button { padding: 10px 20px; margin-top: 10px; cursor: pointer; border: none; background-color: #4CAF50; color: white; border-radius: 4px; }
-        .progress { width: 100%; background: #eee; border-radius: 10px; margin: 10px 0; overflow: hidden; }
-        .progress-bar { height: 20px; background: #4caf50; width: 0%; border-radius: 10px; transition: width 0.5s; }
+        .progress-container { margin-top: 15px; }
+        .progress-label { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9em; color: #555; }
+        .progress { width: 100%; background: #eee; border-radius: 10px; margin: 5px 0; overflow: hidden; }
+        .progress-bar { height: 20px; background: #4CAF50; width: 0%; border-radius: 10px; transition: width 0.5s; position: relative; }
+        .progress-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-weight: bold; }
         #results { margin-top: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 8px; border: 1px solid #ddd; }
         .error-message { color: red; margin-top: 10px; }
     </style>
@@ -38,26 +41,44 @@
         <h3>計算結果</h3>
         <div id="resultContent"></div>
     </div>
+
+    <div class="progress-container">
+        <div class="progress-label">
+            <span>目前等級進度</span>
+            <span id="currentLevelProgressText">0%</span>
+        </div>
+        <div class="progress">
+            <div id="currentLevelProgressBar" class="progress-bar"></div>
+        </div>
+    </div>
     
-    <div class="progress"><div id="progressBar" class="progress-bar"></div></div>
+    <div class="progress-container">
+        <div class="progress-label">
+            <span>總體進度 (至目標等級)</span>
+            <span id="overallProgressText">0%</span>
+        </div>
+        <div class="progress">
+            <div id="overallProgressBar" class="progress-bar"></div>
+        </div>
+    </div>
+
     <div id="errorMsg" class="error-message"></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Pokémon GO 官方總經驗值表
-            // 索引 0 代表等級 1，依此類推
             const xpTable = [
                 0, 1000, 3000, 6000, 10000, 15000, 21000, 28000, 36000, 45000,
                 55000, 65000, 75000, 85000, 100000, 120000, 140000, 160000, 185000, 210000,
                 260000, 335000, 435000, 560000, 710000, 900000, 1100000, 1350000, 1650000, 2000000,
                 2500000, 3000000, 3750000, 4750000, 6000000, 7500000, 9500000, 12000000, 15000000, 20000000,
-                26000000, 33500000, 42500000, 53500000, 66500000, 82000000, 100000000, 121000000, 146000000, 176000000 // Levels 1-50
+                26000000, 33500000, 42500000, 53500000, 66500000, 82000000, 100000000, 121000000, 146000000, 176000000
             ];
 
-            // 預設日期為今天
             const today = new Date();
             document.getElementById('startDate').valueAsDate = today;
-            document.getElementById('endDate').valueAsDate = today;
+
+            const targetDate = new Date(today.getFullYear(), 9, 14);
+            document.getElementById('endDate').valueAsDate = targetDate;
 
             window.calculate = function() {
                 const currentLevel = parseInt(document.getElementById('currentLevel').value);
@@ -67,7 +88,11 @@
                 const endDate = new Date(document.getElementById('endDate').value);
                 const errorMsg = document.getElementById('errorMsg');
                 const resultsDiv = document.getElementById('resultContent');
-                const progressBar = document.getElementById('progressBar');
+                
+                const currentLevelProgressBar = document.getElementById('currentLevelProgressBar');
+                const overallProgressBar = document.getElementById('overallProgressBar');
+                const currentLevelProgressText = document.getElementById('currentLevelProgressText');
+                const overallProgressText = document.getElementById('overallProgressText');
 
                 errorMsg.textContent = '';
                 resultsDiv.innerHTML = '';
@@ -83,12 +108,21 @@
                 }
 
                 const totalExpAtCurrentLevel = xpTable[currentLevel - 1];
+                const totalExpToNextLevel = xpTable[currentLevel] - xpTable[currentLevel - 1];
                 const totalExpToTargetLevel = xpTable[targetLevel - 1];
                 const totalCurrentExp = totalExpAtCurrentLevel + currentXP;
+                
+                if (currentXP > totalExpToNextLevel && currentLevel < 50) {
+                     errorMsg.textContent = `當前 XP 錯誤，等級 ${currentLevel} 升級所需總經驗值為 ${totalExpToNextLevel.toLocaleString()}。`;
+                     return;
+                }
 
                 if (totalCurrentExp >= totalExpToTargetLevel) {
                     resultsDiv.innerHTML = `恭喜你！你目前的經驗值已經足以達到或超過 ${targetLevel} 級了！`;
-                    progressBar.style.width = '100%';
+                    currentLevelProgressBar.style.width = '100%';
+                    overallProgressBar.style.width = '100%';
+                    currentLevelProgressText.textContent = '100%';
+                    overallProgressText.textContent = '100%';
                     return;
                 }
 
@@ -102,15 +136,23 @@
                 }
 
                 const dailyXP = daysLeft > 0 ? Math.ceil(totalXPNeeded / daysLeft) : totalXPNeeded;
-                const progressPercent = (totalCurrentExp / totalExpToTargetLevel) * 100;
+                
+                // 計算目前等級進度條百分比
+                const currentLevelProgressPercent = (currentXP / totalExpToNextLevel) * 100;
+                
+                // 計算總體進度條百分比
+                const overallProgressPercent = (totalCurrentExp / totalExpToTargetLevel) * 100;
 
                 resultsDiv.innerHTML = `
                     <p><strong>總共需要經驗值:</strong> ${totalXPNeeded.toLocaleString()}</p>
                     <p><strong>距離目標天數:</strong> ${daysLeft} 天</p>
                     <p><strong>每天平均需要經驗值:</strong> ${dailyXP.toLocaleString()}</p>
                 `;
-
-                progressBar.style.width = `${progressPercent}%`;
+                
+                currentLevelProgressBar.style.width = `${currentLevelProgressPercent.toFixed(2)}%`;
+                overallProgressBar.style.width = `${overallProgressPercent.toFixed(2)}%`;
+                currentLevelProgressText.textContent = `${currentLevelProgressPercent.toFixed(2)}%`;
+                overallProgressText.textContent = `${overallProgressPercent.toFixed(2)}%`;
             }
         });
     </script>

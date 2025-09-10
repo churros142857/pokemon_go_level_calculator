@@ -22,8 +22,8 @@
     <label>當前等級:</label>
     <input type="number" id="currentLevel" min="1" max="50" value="1">
 
-    <label>當前 XP (距離下一級):</label>
-    <input type="number" id="currentXP" min="0" value="0">
+    <label>當前 XP:</label>
+    <input type="text" id="currentXP" value="0">
 
     <label>目標等級:</label>
     <input type="number" id="targetLevel" min="1" max="50" value="50">
@@ -73,16 +73,35 @@
                 26000000, 33500000, 42500000, 53500000, 66500000, 82000000, 100000000, 121000000, 146000000, 176000000
             ];
             const totalExpForLevel50 = xpTable[49];
+            const currentXPInput = document.getElementById('currentXP');
 
+            // 自動格式化 XP 輸入框
+            currentXPInput.addEventListener('input', (event) => {
+                let value = event.target.value.replace(/,/g, ''); // 移除所有逗號
+                if (!/^\d*$/.test(value)) {
+                    event.target.value = value.replace(/[^\d]/g, '');
+                    value = event.target.value;
+                }
+                const formattedValue = value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                event.target.value = formattedValue;
+            });
+
+            // 預設日期
             const today = new Date();
-            document.getElementById('startDate').valueAsDate = today;
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('startDate').value = `${year}-${month}-${day}`;
 
-            const targetDate = new Date(today.getFullYear(), 9, 14); // 9 代表 10 月
-            document.getElementById('endDate').valueAsDate = targetDate;
+            // 修正目標日期顯示為 10/14
+            const targetMonth = '10';
+            const targetDay = '14';
+            document.getElementById('endDate').value = `${year}-${targetMonth}-${targetDay}`;
 
             window.calculate = function() {
                 const currentLevel = parseInt(document.getElementById('currentLevel').value);
-                const currentXP = parseInt(document.getElementById('currentXP').value);
+                const currentXPValue = currentXPInput.value.replace(/,/g, ''); // 使用無逗號的值
+                const currentXP = parseInt(currentXPValue);
                 const targetLevel = parseInt(document.getElementById('targetLevel').value);
                 const startDate = new Date(document.getElementById('startDate').value);
                 const endDate = new Date(document.getElementById('endDate').value);
@@ -118,8 +137,8 @@
                     resultsDiv.innerHTML = `恭喜你！你目前的經驗值已經足以達到或超過 ${targetLevel} 級了！`;
                     currentLevelProgressBar.style.width = '100%';
                     overallProgressBar.style.width = '100%';
-                    currentLevelProgressText.textContent = '100%';
-                    overallProgressText.textContent = '100%';
+                    currentLevelProgressText.textContent = `100%`;
+                    overallProgressText.textContent = `100%`;
                     return;
                 }
 
@@ -135,10 +154,7 @@
                 const dailyXP = daysLeft > 0 ? Math.ceil(totalXPNeeded / daysLeft) : totalXPNeeded;
                 const dailyExcellentThrowsNeeded = Math.ceil(dailyXP / 2000);
                 
-                // 計算目前等級進度條百分比
                 const currentLevelProgressPercent = (totalExpToNextLevel > 0) ? Math.min((currentXP / totalExpToNextLevel) * 100, 100) : 100;
-                
-                // 計算總體進度條百分比 (固定分母為 LV50 總經驗)
                 const overallProgressPercent = (totalCurrentExp / totalExpForLevel50) * 100;
 
                 resultsDiv.innerHTML = `
@@ -148,14 +164,4 @@
                     <p><strong>每天平均需要 Excellent 投擲:</strong> ${dailyExcellentThrowsNeeded.toLocaleString()} 次</p>
                 `;
                 
-                currentLevelProgressTitle.textContent = `目前等級進度 (${currentLevel} 級 → ${currentLevel + 1} 級)`;
-                overallProgressTitle.textContent = `封頂進度 (${currentLevel} 級 → 50 級)`;
-                currentLevelProgressBar.style.width = `${currentLevelProgressPercent.toFixed(2)}%`;
-                overallProgressBar.style.width = `${overallProgressPercent.toFixed(2)}%`;
-                currentLevelProgressText.textContent = `${currentXP.toLocaleString()} / ${(totalExpToNextLevel).toLocaleString()} XP (${currentLevelProgressPercent.toFixed(2)}%)`;
-                overallProgressText.textContent = `${totalCurrentExp.toLocaleString()} / ${totalExpForLevel50.toLocaleString()} XP (${overallProgressPercent.toFixed(2)}%)`;
-            }
-        });
-    </script>
-</body>
-</html>
+                currentLevelProgressTitle.textContent =
